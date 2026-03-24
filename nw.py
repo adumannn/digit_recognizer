@@ -1,7 +1,6 @@
 import numpy as np
 import tkinter as tk
 from PIL import Image, ImageDraw, ImageOps
-import matplotlib.pyplot as plt
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
@@ -93,13 +92,14 @@ def crop_and_center(img):
         img = Image.new("L",(8,8),255)
     return img
 
-# ========== GUI Calculator ==========
+# -- gui --
 canvas_size, brush = 200, 8
 
-class CalculatorApp:
+class App:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Digit Calculator")
+        self.last_x, self.last_y = None, None
 
         self.expression = ""   # expression string
 
@@ -111,34 +111,36 @@ class CalculatorApp:
         self.canvas = tk.Canvas(self.root, width=canvas_size, height=canvas_size, bg="white")
         self.canvas.pack()
         self.canvas.bind("<B1-Motion>", self.paint)
-
-        # Buttons
-        btnf = tk.Frame(self.root); btnf.pack(pady=5)
-        tk.Button(btnf, text="Predict Digit", command=self.predict).grid(row=0, column=0, padx=5)
-        tk.Button(btnf, text="Clear", command=self.clear_canvas).grid(row=0, column=1, padx=5)
-        tk.Button(btnf, text="+", command=lambda: self.add_op("+")).grid(row=0, column=2, padx=5)
-        tk.Button(btnf, text="-", command=lambda: self.add_op("-")).grid(row=0, column=3, padx=5)
-        tk.Button(btnf, text="*", command=lambda: self.add_op("*")).grid(row=0, column=4, padx=5)
-        tk.Button(btnf, text="/", command=lambda: self.add_op("/")).grid(row=0, column=5, padx=5)
-        tk.Button(btnf, text="=", command=self.evaluate).grid(row=0, column=6, padx=5)
-        tk.Button(btnf, text="C", command=self.clear_all).grid(row=0, column=7, padx=5)
+        self.canvas.bind("<ButtonRelease-1>", self.reset_last) 
 
         # PIL image for canvas
         self.img = Image.new("L",(canvas_size,canvas_size),"white")
         self.draw = ImageDraw.Draw(self.img)
 
+        # Buttons
+        btnf = tk.Frame(self.root)
+        btnf.pack(pady=5)
+        tk.Button(btnf, text="Predict Digit", command=self.predict).grid(row=0, column=0, padx=5)
+        tk.Button(btnf, text="Clear",         command=self.clear_canvas).grid(row=0, column=1, padx=5)
+
     def paint(self, e):
         x,y = e.x,e.y
-        self.canvas.create_oval(x-brush, y-brush, x+brush, y+brush, fill="black")
+        if self.last_x is not None:
+            self.canvas.create_line(self.last_x, self.last_y, x, y, width=brush*2, fill="black", capstyle=tk.ROUND, smooth=True)
+            self.draw.line([self.last_x, self.last_y, x, y], fill="black", width=brush*2)
+
+        self.canvas.create_oval(x-brush, y-brush, x+brush, y+brush, fill="black", outline="")
         self.draw.ellipse([x-brush,y-brush,x+brush,y+brush], fill="black")
+        self.last_x, self.last_y = x, y
+
+    def reset_last(self, e):
+        self.last_x = None
+        self.last_y = None
 
     def clear_canvas(self):
         self.canvas.delete("all")
         self.draw.rectangle([0,0,canvas_size,canvas_size], fill="white")
-
-    def clear_all(self):
-        self.expression = ""
-        self.label.config(text="")
+        self.last_x, self.last_y = None, None
 
     def predict(self):
         im = self.img.copy().convert("L")
@@ -161,17 +163,8 @@ class CalculatorApp:
         self.expression += op
         self.label.config(text=self.expression)
 
-    def evaluate(self):
-        try:
-            result = str(eval(self.expression))
-            self.label.config(text=result)
-            self.expression = result
-        except Exception:
-            self.label.config(text="Error")
-            self.expression = ""
-
     def run(self):
         self.root.mainloop()
 
 if __name__ == "__main__":
-    CalculatorApp().run()
+    App().run()
