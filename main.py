@@ -41,7 +41,7 @@ b1 = np.zeros((1, hid_size))
 W2 = np.random.randn(hid_size, out_size) * np.sqrt(2. / hid_size)
 b2 = np.zeros((1, out_size))
 
-lr, epochs = 0.05, 300   # fewer epochs for faster start
+lr, epochs = 0.05, 6000   # fewer epochs for faster start
 
 # ========== Training ==========
 for epoch in range(epochs):
