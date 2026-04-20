@@ -1,11 +1,13 @@
 import numpy as np
 import tkinter as tk
-from PIL import Image, ImageDraw, ImageOps
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 
-# ========== Activation ==========
+from PIL import Image, ImageDraw, ImageOps
+
+
+# Activation nonlinear
 def relu(x):
     return np.maximum(0, x)
 
